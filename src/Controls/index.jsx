@@ -37,6 +37,9 @@ const COUNTRY_COORDINATES = {
   Iraq: { lat: 33.2232, lng: 43.6793, zoom: 6 },
   UAE: { lat: 23.4241, lng: 53.8478, zoom: 7 },
   'Saudi Arabia': { lat: 23.8859, lng: 45.0792, zoom: 6 },
+  Oman: { lat: 21.4735, lng: 55.9754, zoom: 7 },
+  Bahrain: { lat: 26.0667, lng: 50.5577, zoom: 9 },
+  Qatar: { lat: 25.3548, lng: 51.1839, zoom: 8 },
 }
 
 class MainControl extends React.Component {
@@ -198,7 +201,7 @@ class MainControl extends React.Component {
   handleCountryClick = (country) => {
     const { dispatch } = this.props
     const coords = COUNTRY_COORDINATES[country]
-    dispatch(zoomTo([[coords.lat, coords.lng]], coords.zoom))
+    dispatch(zoomTo([[coords.lat, coords.lng]], undefined, coords.zoom))
   }
 
   render() {
