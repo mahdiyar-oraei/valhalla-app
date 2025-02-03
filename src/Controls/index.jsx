@@ -8,7 +8,7 @@ import DirectionsControl from './Directions'
 import IsochronesControl from './Isochrones'
 import DirectionOutputControl from './Directions/OutputControl'
 import IsochronesOutputControl from './Isochrones/OutputControl'
-import { Segment, Tab, Button, Icon } from 'semantic-ui-react'
+import { Segment, Tab, Button, Icon, ButtonGroup } from 'semantic-ui-react'
 import {
   updateTab,
   updateProfile,
@@ -30,6 +30,13 @@ const pairwise = (arr, func) => {
     func(arr[i], arr[i + 1], cnt)
     cnt += 1
   }
+}
+
+const COUNTRY_COORDINATES = {
+  Iran: { lat: 32.4279, lng: 53.688, zoom: 6 },
+  Iraq: { lat: 33.2232, lng: 43.6793, zoom: 6 },
+  UAE: { lat: 23.4241, lng: 53.8478, zoom: 7 },
+  'Saudi Arabia': { lat: 23.8859, lng: 45.0792, zoom: 6 },
 }
 
 class MainControl extends React.Component {
@@ -188,6 +195,12 @@ class MainControl extends React.Component {
     dispatch(toggleDirections())
   }
 
+  handleCountryClick = (country) => {
+    const { dispatch } = this.props
+    const coords = COUNTRY_COORDINATES[country]
+    dispatch(zoomTo([[coords.lat, coords.lng]], 1))
+  }
+
   render() {
     const { activeTab } = this.props
     const appPanes = [
@@ -241,6 +254,26 @@ class MainControl extends React.Component {
         >
           {activeTab === 0 ? 'Directions' : 'Isochrones'}
         </Button>
+
+        <ButtonGroup
+          style={{
+            zIndex: 998,
+            top: '10px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            position: 'absolute',
+          }}
+        >
+          {Object.keys(COUNTRY_COORDINATES).map((country) => (
+            <Button
+              key={country}
+              onClick={() => this.handleCountryClick(country)}
+            >
+              {country}
+            </Button>
+          ))}
+        </ButtonGroup>
+
         <Drawer
           enableOverlay={false}
           open={this.props.showDirectionsPanel}
