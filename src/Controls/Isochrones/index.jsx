@@ -57,22 +57,8 @@ class IsochronesControl extends React.Component {
             <ProfilePicker
               group={'directions'}
               loading={loading}
-              profiles={[
-                'bicycle',
-                'pedestrian',
-                'car',
-                'truck',
-                'bus',
-                'motor_scooter',
-              ]}
-              popupContent={[
-                'Bicycle',
-                'Pedestrian',
-                'Car',
-                'Truck',
-                'Bus',
-                'Motor Scooter',
-              ]}
+              profiles={['car']}
+              popupContent={['Car']}
               activeProfile={profile}
               handleUpdateProfile={this.handleUpdateProfile}
             />

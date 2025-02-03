@@ -93,25 +93,9 @@ class DirectionsControl extends React.Component {
             <div className="pa2 flex flex-row justify-between">
               <ProfilePicker
                 group={'directions'}
-                profiles={[
-                  'bicycle',
-                  'pedestrian',
-                  'car',
-                  'truck',
-                  'bus',
-                  'motor_scooter',
-                  'motorcycle',
-                ]}
+                profiles={['car']}
                 loading={loading}
-                popupContent={[
-                  'Bicycle',
-                  'Pedestrian',
-                  'Car',
-                  'Truck',
-                  'Bus',
-                  'Motor Scooter',
-                  'Motorcycle',
-                ]}
+                popupContent={['Car']}
                 activeProfile={profile}
                 handleUpdateProfile={this.handleUpdateProfile}
               />
