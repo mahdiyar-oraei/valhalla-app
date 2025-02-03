@@ -231,7 +231,7 @@ class Map extends React.Component {
         setTimeout(() => {
           this.setState({
             showPopup: true,
-            showInfoPopup: true,
+            showInfoPopup: false,
             latLng: event.latlng,
           })
           popup.update()

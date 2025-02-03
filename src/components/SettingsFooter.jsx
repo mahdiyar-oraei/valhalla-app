@@ -3,7 +3,7 @@ import React from 'react'
 export const SettingsFooter = () => {
   return (
     <div className="ml2 mr2">
-      <span className="custom-label">
+      {/* <span className="custom-label">
         Calculations by{' '}
         <a
           href="https://github.com/valhalla/valhalla"
@@ -20,7 +20,7 @@ export const SettingsFooter = () => {
         >
           Valhalla App
         </a>
-      </span>
+      </span> */}
     </div>
   )
 }
