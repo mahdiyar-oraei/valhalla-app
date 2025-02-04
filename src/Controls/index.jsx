@@ -201,7 +201,7 @@ class MainControl extends React.Component {
   handleCountryClick = (country) => {
     const { dispatch } = this.props
     const coords = COUNTRY_COORDINATES[country]
-    dispatch(zoomTo([[coords.lat, coords.lng]], undefined, coords.zoom))
+    dispatch(zoomTo([[coords.lat, coords.lng]], coords.zoom))
   }
 
   render() {

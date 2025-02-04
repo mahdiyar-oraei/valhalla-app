@@ -20,6 +20,7 @@ const initialState = {
   showSettings: false,
   showDirectionsPanel: true,
   coordinates: [],
+  zoomLevel: null,
   loading: false,
   message: {
     receivedAt: 0,
@@ -28,7 +29,7 @@ const initialState = {
     topic: null,
     description: null,
   },
-  profile: 'bicycle',
+  profile: 'car',
   settings: { ...settingsInit },
   dateTime: {
     type: -1,
@@ -54,7 +55,8 @@ export const common = (state = initialState, action) => {
     case ZOOM_TO: {
       return {
         ...state,
-        coordinates: action.payload,
+        coordinates: action.payload.coords,
+        zoomLevel: action.payload.zoom,
       }
     }
 

@@ -56,9 +56,9 @@ export const resetSettings = () => ({
   type: RESET_SETTINGS,
 })
 
-export const zoomTo = (coords) => ({
+export const zoomTo = (coords, zoom) => ({
   type: ZOOM_TO,
-  payload: coords,
+  payload: { coords, zoom },
 })
 
 export const doUpdateDateTime = (key, value) => ({

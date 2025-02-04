@@ -124,6 +124,7 @@ class Map extends React.Component {
     activeDataset: PropTypes.string,
     showRestrictions: PropTypes.object,
     coordinates: PropTypes.array,
+    zoomLevel: PropTypes.number,
     showDirectionsPanel: PropTypes.bool,
     showSettings: PropTypes.bool,
   }
@@ -441,8 +442,9 @@ class Map extends React.Component {
   }
 
   zoomToCoordinates = () => {
-    const { coordinates, showDirectionsPanel, showSettings } = this.props
-    const maxZoom = coordinates.length === 1 ? 11 : 18
+    const { coordinates, showDirectionsPanel, showSettings, zoomLevel } =
+      this.props
+
     const paddingTopLeft = [
       screen.width < 550 ? 50 : showDirectionsPanel ? 420 : 50,
       50,
@@ -453,11 +455,15 @@ class Map extends React.Component {
       50,
     ]
 
-    this.map.fitBounds(coordinates, {
-      paddingBottomRight,
-      paddingTopLeft,
-      maxZoom,
-    })
+    if (zoomLevel) {
+      this.map.setView(coordinates[0], zoomLevel)
+    } else {
+      this.map.fitBounds(coordinates, {
+        paddingBottomRight,
+        paddingTopLeft,
+        maxZoom: coordinates.length === 1 ? 11 : 18,
+      })
+    }
   }
 
   zoomTo = (idx) => {
@@ -1152,6 +1158,7 @@ const mapStateToProps = (state) => {
     coordinates,
     showDirectionsPanel,
     showSettings,
+    zoomLevel,
   } = common
   return {
     directions,
@@ -1163,6 +1170,7 @@ const mapStateToProps = (state) => {
     showRestrictions,
     showDirectionsPanel,
     showSettings,
+    zoomLevel,
   }
 }
 

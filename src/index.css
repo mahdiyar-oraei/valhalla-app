@@ -62,10 +62,10 @@ i.help.grey.icon {
   font-weight: bold;
 }
 
-.ui.menu .item{
+.ui.menu .item {
   width: 50%;
 }
 
-.ui.menu:not(.vertical) .item{
+.ui.menu:not(.vertical) .item {
   justify-content: center;
 }
