@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { connect } from 'react-redux'
@@ -139,6 +140,7 @@ class Map extends React.Component {
       isLocateLoading: false,
       isHeightLoading: false,
       locate: [],
+      selectedRouteIndex: -1,
     }
   }
 
@@ -645,60 +647,68 @@ class Map extends React.Component {
 
   addRoutes = () => {
     const { results } = this.props.directions
+    const { selectedRouteIndex } = this.state
     routeLineStringLayer.clearLayers()
 
     if (Object.keys(results[OSRM_API_URL].data).length > 0) {
       const response = results[OSRM_API_URL].data
-      // show alternates if they exist on the respsonse
+      const routes = []
+      
+      // Prepare all routes first
       if (response.alternates) {
         for (let i = 0; i < response.alternates.length; i++) {
-          if (!results[OSRM_API_URL].show[i]) {
-            continue
-          }
-          const alternate = response.alternates[i]
-          const coords = alternate.decodedGeometry
-          const summary = alternate.trip.summary
-          L.polyline(coords, {
-            color: '#FFF',
-            weight: 9,
-            opacity: 1,
-            pmIgnore: true,
-          }).addTo(routeLineStringLayer)
-          L.polyline(coords, {
-            color: routeObjects[OSRM_API_URL].alternativeColor,
-            weight: 5,
-            opacity: 1,
-            pmIgnore: true,
-          })
-            .addTo(routeLineStringLayer)
-            .bindTooltip(this.getRouteToolTip(summary, OSRM_API_URL), {
-              permanent: false,
-              sticky: true,
-            })
+          if (!results[OSRM_API_URL].show[i]) continue;
+          
+          routes.push({
+            coords: response.alternates[i].decodedGeometry,
+            summary: response.alternates[i].trip.summary,
+            index: i,
+            isSelected: selectedRouteIndex === i
+          });
         }
       }
-      if (!results[OSRM_API_URL].show[-1]) {
-        return
+
+      if (results[OSRM_API_URL].show[-1]) {
+        routes.push({
+          coords: response.decodedGeometry,
+          summary: response.trip.summary,
+          index: -1,
+          isSelected: selectedRouteIndex === -1
+        });
       }
-      const coords = response.decodedGeometry
-      const summary = response.trip.summary
-      L.polyline(coords, {
-        color: '#FFF',
-        weight: 9,
-        opacity: 1,
-        pmIgnore: true,
-      }).addTo(routeLineStringLayer)
-      L.polyline(coords, {
-        color: routeObjects[OSRM_API_URL].color,
-        weight: 5,
-        opacity: 1,
-        pmIgnore: true,
-      })
-        .addTo(routeLineStringLayer)
-        .bindTooltip(this.getRouteToolTip(summary, OSRM_API_URL), {
-          permanent: false,
-          sticky: true,
+
+      // Sort routes to draw selected route last (on top)
+      routes.sort((a, b) => {
+        if (a.isSelected) return 1;
+        if (b.isSelected) return -1;
+        return 0;
+      });
+
+      // Draw routes in order
+      routes.forEach(route => {
+        // Background line
+        L.polyline(route.coords, {
+          color: '#FFF',
+          weight: route.isSelected ? 9 : 7,
+          opacity: 1,
+          pmIgnore: true,
+          zIndexOffset: route.isSelected ? 1000 : 0
+        }).addTo(routeLineStringLayer)
+
+        // Colored line
+        L.polyline(route.coords, {
+          color: route.isSelected ? routeObjects[OSRM_API_URL].color : routeObjects[OSRM_API_URL].alternativeColor,
+          weight: route.isSelected ? 5 : 3,
+          opacity: route.isSelected ? 1 : 0.6,
+          pmIgnore: true,
+          zIndexOffset: route.isSelected ? 1000 : 0
         })
+          .addTo(routeLineStringLayer)
+          .bindTooltip(this.getRouteToolTip(route.summary, OSRM_API_URL), {
+            permanent: false,
+            sticky: true,
+          })
+      });
 
       if (this.hg._showState === true) {
         this.hg._expand()
@@ -910,6 +920,70 @@ class Map extends React.Component {
     const zoom = map.getZoom()
     const osmURL = `https://www.openstreetmap.org/#map=${zoom}/${lat}/${lng}`
     window.open(osmURL, '_blank')
+  }
+
+  handleRouteSelect = (index) => {
+    this.setState({ selectedRouteIndex: index }, () => {
+      this.addRoutes()
+    })
+  }
+
+  renderRouteList = () => {
+    const { results } = this.props.directions
+    const { selectedRouteIndex } = this.state
+
+    if (!results[OSRM_API_URL]?.data?.trip) return null
+
+    const routes = [
+      {
+        summary: results[OSRM_API_URL].data.trip.summary,
+        index: -1,
+        isMain: true
+      },
+      ...(results[OSRM_API_URL].data.alternates || []).map((alt, idx) => ({
+        summary: alt.trip.summary,
+        index: idx,
+        isMain: false
+      }))
+    ]
+
+    return (
+      <div className="route-list" style={{
+        position: 'absolute',
+        top: '80px',
+        right: '10px',
+        zIndex: 1000,
+        backgroundColor: 'white',
+        padding: '10px',
+        borderRadius: '4px',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+      }}>
+        {routes.map((route) => (
+          <div
+            key={route.index}
+            onClick={() => this.handleRouteSelect(route.index)}
+            style={{
+              padding: '8px',
+              margin: '4px 0',
+              cursor: 'pointer',
+              backgroundColor: selectedRouteIndex === route.index ? '#e0e7ff' : 'white',
+              border: selectedRouteIndex === route.index ? '2px solid #4f46e5' : '1px solid #ccc',
+              borderRadius: '4px',
+              transition: 'all 0.2s ease',
+              transform: selectedRouteIndex === route.index ? 'scale(1.02)' : 'scale(1)',
+            }}
+          >
+            <div style={{ 
+              fontWeight: selectedRouteIndex === route.index ? 'bold' : 'normal' 
+            }}>
+              Route {route.isMain ? '(Main)' : route.index + 1}
+            </div>
+            <div>Distance: {route.summary.length.toFixed(1)} km</div>
+            <div>Duration: {formatDuration(route.summary.time)}</div>
+          </div>
+        ))}
+      </div>
+    )
   }
 
   render() {
@@ -1128,6 +1202,7 @@ class Map extends React.Component {
             theme="light"
           />
           <div id="map" className="map-style" />
+          {this.renderRouteList()}
           <button
             className="ui primary button"
             id="osm-button"
