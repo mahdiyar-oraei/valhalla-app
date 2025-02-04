@@ -22,40 +22,94 @@ import {
   parseGeocodeResponse,
 } from 'utils/nominatim'
 
-import {
-  VALHALLA_OSM_URL,
-  buildDirectionsRequest,
-  parseDirectionsGeometry,
-} from 'utils/valhalla'
+import { VALHALLA_OSM_URL } from 'utils/valhalla'
 
 import {
   sendMessage,
   showLoading,
-  filterProfileSettings,
   updatePermalink,
   zoomTo,
 } from './commonActions'
 
-const serverMapping = {
-  [VALHALLA_OSM_URL]: 'OSM',
+import {
+  OSRM_API_URL,
+  buildDirectionsRequest,
+  decodeOSRMGeometry,
+} from 'utils/osrm'
+
+const fetchOSRMDirections = (osrmRequest) => (dispatch) => {
+  dispatch(showLoading(true))
+
+  axios
+    .post(OSRM_API_URL + '/route', osrmRequest, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    .then(({ data }) => {
+      // Transform OSRM response to match expected format
+      const transformedData = {
+        trip: {
+          legs: data.routes[0].legs,
+          summary: {
+            length: data.routes[0].distance / 1000, // Convert to km
+            time: data.routes[0].duration,
+          },
+        },
+        alternates: data.routes.slice(1).map((route) => ({
+          trip: {
+            legs: route.legs,
+            summary: {
+              length: route.distance / 1000,
+              time: route.duration,
+            },
+            geometry: route.geometry,
+          },
+        })),
+        decodedGeometry: decodeOSRMGeometry(data.routes[0].geometry),
+      }
+
+      console.log(transformedData)
+
+      if (transformedData.alternates) {
+        transformedData.alternates.forEach((alternate) => {
+          alternate.decodedGeometry = decodeOSRMGeometry(
+            alternate.trip.geometry
+          )
+        })
+      }
+
+      dispatch(registerRouteResponse(OSRM_API_URL, transformedData))
+      dispatch(zoomTo(transformedData.decodedGeometry))
+    })
+    .catch((error) => {
+      console.log(error)
+      dispatch(clearRoutes(OSRM_API_URL))
+      dispatch(
+        sendMessage({
+          type: 'warning',
+          icon: 'warning',
+          description: `OSRM: ${
+            error.response?.data?.message || 'Unknown error'
+          }`,
+          title: 'Error',
+        })
+      )
+    })
+    .finally(() => {
+      setTimeout(() => {
+        dispatch(showLoading(false))
+      }, 500)
+    })
 }
 
 export const makeRequest = () => (dispatch, getState) => {
   dispatch(updatePermalink())
   const { waypoints } = getState().directions
-  const { profile, dateTime } = getState().common
-  let { settings } = getState().common
-  // if 2 results are selected
   const activeWaypoints = getActiveWaypoints(waypoints)
   if (activeWaypoints.length >= 2) {
-    settings = filterProfileSettings(profile, settings)
-    const valhallaRequest = buildDirectionsRequest({
-      profile,
-      activeWaypoints,
-      settings,
-      dateTime,
-    })
-    dispatch(fetchValhallaDirections(valhallaRequest))
+    const osrmRequest = buildDirectionsRequest({ activeWaypoints })
+    dispatch(fetchOSRMDirections(osrmRequest))
   }
 }
 
@@ -72,52 +126,6 @@ const getActiveWaypoints = (waypoints) => {
     }
   }
   return activeWaypoints
-}
-
-const fetchValhallaDirections = (valhallaRequest) => (dispatch) => {
-  dispatch(showLoading(true))
-
-  const config = {
-    params: { json: JSON.stringify(valhallaRequest.json) },
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  }
-  axios
-    .get(VALHALLA_OSM_URL + '/route', config)
-    .then(({ data }) => {
-      data.decodedGeometry = parseDirectionsGeometry(data)
-
-      if (data.alternates) {
-        for (let i = 0; i < data.alternates.length; i++) {
-          const alternate = data.alternates[i]
-          data.alternates[i].decodedGeometry =
-            parseDirectionsGeometry(alternate)
-        }
-      }
-      dispatch(registerRouteResponse(VALHALLA_OSM_URL, data))
-      dispatch(zoomTo(data.decodedGeometry))
-    })
-    .catch(({ response }) => {
-      let error_msg = response.data.error
-      if (response.data.error_code === 154) {
-        error_msg += ` for ${valhallaRequest.json.costing}.`
-      }
-      dispatch(clearRoutes(VALHALLA_OSM_URL))
-      dispatch(
-        sendMessage({
-          type: 'warning',
-          icon: 'warning',
-          description: `${serverMapping[VALHALLA_OSM_URL]}: ${error_msg}`,
-          title: `${response.data.status}`,
-        })
-      )
-    })
-    .finally(() => {
-      setTimeout(() => {
-        dispatch(showLoading(false))
-      }, 500)
-    })
 }
 
 export const registerRouteResponse = (provider, data) => ({

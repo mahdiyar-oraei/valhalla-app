@@ -16,6 +16,7 @@ import {
 } from 'actions/types'
 
 import { VALHALLA_OSM_URL } from '../utils/valhalla'
+import { OSRM_API_URL } from '../utils/osrm'
 
 const initialState = {
   successful: false,
@@ -33,6 +34,12 @@ const initialState = {
   selectedAddresses: '',
   results: {
     [VALHALLA_OSM_URL]: {
+      data: {},
+      show: {
+        '-1': true,
+      },
+    },
+    [OSRM_API_URL]: {
       data: {},
       show: {
         '-1': true,

@@ -33,6 +33,8 @@ import {
 import { colorMappings, buildHeightgraphData } from 'utils/heightgraph'
 import formatDuration from 'utils/date_time'
 import './Map.css'
+import { OSRM_API_URL } from 'utils/osrm'
+
 const OSMTiles = L.tileLayer(process.env.REACT_APP_TILE_SERVER_URL, {
   attribution:
     '<a href="https://map.project-osrm.org/about.html" target="_blank">About this service and privacy policy</a> | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -106,10 +108,10 @@ const mapParams = {
 }
 
 const routeObjects = {
-  [VALHALLA_OSM_URL]: {
+  [OSRM_API_URL]: {
     color: '#0066ff',
     alternativeColor: '#66a3ff',
-    name: 'OSM',
+    name: 'OSRM',
   },
 }
 
@@ -469,7 +471,7 @@ class Map extends React.Component {
   zoomTo = (idx) => {
     const { results } = this.props.directions
 
-    const coords = results[VALHALLA_OSM_URL].data.decodedGeometry
+    const coords = results[OSRM_API_URL].data.decodedGeometry
 
     this.map.setView(coords[idx], 17)
 
@@ -532,10 +534,9 @@ class Map extends React.Component {
 
     let coords
     if (alternate == -1) {
-      coords = results[VALHALLA_OSM_URL].data.decodedGeometry
+      coords = results[OSRM_API_URL].data.decodedGeometry
     } else {
-      coords =
-        results[VALHALLA_OSM_URL].data.alternates[alternate].decodedGeometry
+      coords = results[OSRM_API_URL].data.alternates[alternate].decodedGeometry
     }
 
     if (startIndex > -1 && endIndex > -1) {
@@ -646,12 +647,12 @@ class Map extends React.Component {
     const { results } = this.props.directions
     routeLineStringLayer.clearLayers()
 
-    if (Object.keys(results[VALHALLA_OSM_URL].data).length > 0) {
-      const response = results[VALHALLA_OSM_URL].data
+    if (Object.keys(results[OSRM_API_URL].data).length > 0) {
+      const response = results[OSRM_API_URL].data
       // show alternates if they exist on the respsonse
       if (response.alternates) {
         for (let i = 0; i < response.alternates.length; i++) {
-          if (!results[VALHALLA_OSM_URL].show[i]) {
+          if (!results[OSRM_API_URL].show[i]) {
             continue
           }
           const alternate = response.alternates[i]
@@ -664,19 +665,19 @@ class Map extends React.Component {
             pmIgnore: true,
           }).addTo(routeLineStringLayer)
           L.polyline(coords, {
-            color: routeObjects[VALHALLA_OSM_URL].alternativeColor,
+            color: routeObjects[OSRM_API_URL].alternativeColor,
             weight: 5,
             opacity: 1,
             pmIgnore: true,
           })
             .addTo(routeLineStringLayer)
-            .bindTooltip(this.getRouteToolTip(summary, VALHALLA_OSM_URL), {
+            .bindTooltip(this.getRouteToolTip(summary, OSRM_API_URL), {
               permanent: false,
               sticky: true,
             })
         }
       }
-      if (!results[VALHALLA_OSM_URL].show[-1]) {
+      if (!results[OSRM_API_URL].show[-1]) {
         return
       }
       const coords = response.decodedGeometry
@@ -688,13 +689,13 @@ class Map extends React.Component {
         pmIgnore: true,
       }).addTo(routeLineStringLayer)
       L.polyline(coords, {
-        color: routeObjects[VALHALLA_OSM_URL].color,
+        color: routeObjects[OSRM_API_URL].color,
         weight: 5,
         opacity: 1,
         pmIgnore: true,
       })
         .addTo(routeLineStringLayer)
-        .bindTooltip(this.getRouteToolTip(summary, VALHALLA_OSM_URL), {
+        .bindTooltip(this.getRouteToolTip(summary, OSRM_API_URL), {
           permanent: false,
           sticky: true,
         })
@@ -799,7 +800,7 @@ class Map extends React.Component {
     const { dispatch } = this.props
 
     const heightPayload = buildHeightRequest(
-      results[VALHALLA_OSM_URL].data.decodedGeometry
+      results[OSRM_API_URL].data.decodedGeometry
     )
 
     if (!R.equals(this.state.heightPayload, heightPayload)) {
@@ -815,7 +816,7 @@ class Map extends React.Component {
           this.setState({ isHeightLoading: false })
           // lets build geojson object with steepness for the height graph
           const reversedGeometry = JSON.parse(
-            JSON.stringify(results[VALHALLA_OSM_URL].data.decodedGeometry)
+            JSON.stringify(results[OSRM_API_URL].data.decodedGeometry)
           ).map((pair) => {
             return [...pair.reverse()]
           })
