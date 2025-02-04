@@ -255,21 +255,6 @@ class Map extends React.Component {
       localStorage.setItem('last_center', last_center)
     })
 
-    // add Leaflet-Geoman controls with some options to the map
-    this.map.pm.addControls({
-      position: 'topright',
-      drawCircle: false,
-      drawMarker: false,
-      drawPolyline: false,
-      cutPolygon: false,
-      drawCircleMarker: false,
-      drawRectangle: false,
-      dragMode: true,
-      allowSelfIntersection: false,
-      editPolygon: true,
-      deleteLayer: true,
-    })
-
     this.map.pm.setGlobalOptions({
       layerGroup: excludePolygonsLayer,
     })
