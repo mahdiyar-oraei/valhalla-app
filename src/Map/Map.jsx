@@ -652,63 +652,67 @@ class Map extends React.Component {
 
     if (Object.keys(results[OSRM_API_URL].data).length > 0) {
       const response = results[OSRM_API_URL].data
-      const routes = []
       
-      // Prepare all routes first
+      // Draw alternates first (underneath)
       if (response.alternates) {
         for (let i = 0; i < response.alternates.length; i++) {
           if (!results[OSRM_API_URL].show[i]) continue;
           
-          routes.push({
-            coords: response.alternates[i].decodedGeometry,
-            summary: response.alternates[i].trip.summary,
-            index: i,
-            isSelected: selectedRouteIndex === i
-          });
+          const alternate = response.alternates[i]
+          const coords = alternate.decodedGeometry
+          const summary = alternate.trip.summary
+          const isSelected = selectedRouteIndex === i
+
+          // Background line
+          L.polyline(coords, {
+            color: '#FFF',
+            weight: isSelected ? 9 : 7,
+            opacity: 1,
+            pmIgnore: true,
+          }).addTo(routeLineStringLayer)
+
+          // Colored line
+          L.polyline(coords, {
+            color: isSelected ? routeObjects[OSRM_API_URL].color : routeObjects[OSRM_API_URL].alternativeColor,
+            weight: isSelected ? 5 : 3,
+            opacity: isSelected ? 1 : 0.6,
+            pmIgnore: true,
+          })
+            .addTo(routeLineStringLayer)
+            .bindTooltip(this.getRouteToolTip(summary, OSRM_API_URL), {
+              permanent: false,
+              sticky: true,
+            })
         }
       }
 
+      // Draw main route
       if (results[OSRM_API_URL].show[-1]) {
-        routes.push({
-          coords: response.decodedGeometry,
-          summary: response.trip.summary,
-          index: -1,
-          isSelected: selectedRouteIndex === -1
-        });
-      }
+        const coords = response.decodedGeometry
+        const summary = response.trip.summary
+        const isSelected = selectedRouteIndex === -1
 
-      // Sort routes to draw selected route last (on top)
-      routes.sort((a, b) => {
-        if (a.isSelected) return 1;
-        if (b.isSelected) return -1;
-        return 0;
-      });
-
-      // Draw routes in order
-      routes.forEach(route => {
         // Background line
-        L.polyline(route.coords, {
+        L.polyline(coords, {
           color: '#FFF',
-          weight: route.isSelected ? 9 : 7,
+          weight: isSelected ? 9 : 7,
           opacity: 1,
           pmIgnore: true,
-          zIndexOffset: route.isSelected ? 1000 : 0
         }).addTo(routeLineStringLayer)
 
         // Colored line
-        L.polyline(route.coords, {
-          color: route.isSelected ? routeObjects[OSRM_API_URL].color : routeObjects[OSRM_API_URL].alternativeColor,
-          weight: route.isSelected ? 5 : 3,
-          opacity: route.isSelected ? 1 : 0.6,
+        L.polyline(coords, {
+          color: isSelected ? routeObjects[OSRM_API_URL].color : routeObjects[OSRM_API_URL].alternativeColor,
+          weight: isSelected ? 5 : 3,
+          opacity: isSelected ? 1 : 0.6,
           pmIgnore: true,
-          zIndexOffset: route.isSelected ? 1000 : 0
         })
           .addTo(routeLineStringLayer)
-          .bindTooltip(this.getRouteToolTip(route.summary, OSRM_API_URL), {
+          .bindTooltip(this.getRouteToolTip(summary, OSRM_API_URL), {
             permanent: false,
             sticky: true,
           })
-      });
+      }
 
       if (this.hg._showState === true) {
         this.hg._expand()
@@ -966,18 +970,12 @@ class Map extends React.Component {
               padding: '8px',
               margin: '4px 0',
               cursor: 'pointer',
-              backgroundColor: selectedRouteIndex === route.index ? '#e0e7ff' : 'white',
-              border: selectedRouteIndex === route.index ? '2px solid #4f46e5' : '1px solid #ccc',
-              borderRadius: '4px',
-              transition: 'all 0.2s ease',
-              transform: selectedRouteIndex === route.index ? 'scale(1.02)' : 'scale(1)',
+              backgroundColor: selectedRouteIndex === route.index ? '#e6e6e6' : 'white',
+              border: '1px solid #ccc',
+              borderRadius: '4px'
             }}
           >
-            <div style={{ 
-              fontWeight: selectedRouteIndex === route.index ? 'bold' : 'normal' 
-            }}>
-              Route {route.isMain ? '(Main)' : route.index + 1}
-            </div>
+            <div>Route {route.isMain ? '(Main)' : route.index + 1}</div>
             <div>Distance: {route.summary.length.toFixed(1)} km</div>
             <div>Duration: {formatDuration(route.summary.time)}</div>
           </div>
