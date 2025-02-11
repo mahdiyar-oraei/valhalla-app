@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import { createContext, useContext, useState, useCallback } from 'react';
 
 const VroomContext = createContext(null);
@@ -24,7 +26,19 @@ export function VroomProvider({ children }) {
   }, []);
 
   const addVehicle = useCallback((vehicle) => {
-    setVehicles(prev => [...prev, vehicle]);
+    setVehicles(prev => [...prev, {
+      ...vehicle,
+      start: null, // Initial start position
+      end: null    // Initial end position
+    }]);
+  }, []);
+
+  const updateVehiclePosition = useCallback((vehicleId, type, position) => {
+    setVehicles(prev => prev.map(v => 
+      v.id === vehicleId 
+        ? { ...v, [type]: position }
+        : v
+    ));
   }, []);
 
   const removeVehicle = useCallback((vehicleId) => {
@@ -45,6 +59,7 @@ export function VroomProvider({ children }) {
     removeJob,
     addVehicle,
     removeVehicle,
+    updateVehiclePosition,
     setSolution,
     clearAll
   };

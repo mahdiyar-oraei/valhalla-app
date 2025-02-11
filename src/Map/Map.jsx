@@ -953,8 +953,9 @@ class Map extends React.Component {
 
   addJobs = () => {
     const { vroomContext } = this.props;
-    routeMarkersLayer.clearLayers(); // Clear existing markers
+    routeMarkersLayer.clearLayers();
     
+    // Add job markers
     vroomContext.jobs.forEach(job => {
       const jobMarker = L.marker(job.location, {
         icon: ExtraMarkers.icon({
@@ -967,9 +968,62 @@ class Map extends React.Component {
         pmIgnore: true,
       }).addTo(routeMarkersLayer);
 
-      // Add popup with job info
       jobMarker.bindPopup(`Job ${job.id}`);
     });
+
+    // Add vehicle position markers
+    vroomContext.vehicles.forEach(vehicle => {
+      if (vehicle.start) {
+        const startMarker = L.marker(vehicle.start, {
+          icon: ExtraMarkers.icon({
+            icon: 'fa-play',
+            markerColor: 'green',
+            shape: 'circle',
+            prefix: 'fa',
+            iconColor: 'white',
+          }),
+          pmIgnore: true,
+        }).addTo(routeMarkersLayer);
+        startMarker.bindPopup(`Vehicle ${vehicle.id} start position`);
+      }
+
+      if (vehicle.end) {
+        const endMarker = L.marker(vehicle.end, {
+          icon: ExtraMarkers.icon({
+            icon: 'fa-stop',
+            markerColor: 'green',
+            shape: 'circle',
+            prefix: 'fa',
+            iconColor: 'white',
+          }),
+          pmIgnore: true,
+        }).addTo(routeMarkersLayer);
+        endMarker.bindPopup(`Vehicle ${vehicle.id} end position`);
+      }
+    });
+  }
+
+  handleSetVehiclePosition = (vehicleId, type) => {
+    const { latLng } = this.state;
+    const { vroomContext } = this.props;
+    
+    this.map.closePopup();
+    
+    vroomContext.updateVehiclePosition(vehicleId, type, [latLng.lat, latLng.lng]);
+    
+    // Add or update marker for the vehicle position
+    const marker = L.marker([latLng.lat, latLng.lng], {
+      icon: ExtraMarkers.icon({
+        icon: type === 'start' ? 'fa-play' : 'fa-stop',
+        markerColor: 'green',
+        shape: 'circle',
+        prefix: 'fa',
+        iconColor: 'white',
+      }),
+      pmIgnore: true,
+    }).addTo(routeMarkersLayer);
+
+    marker.bindPopup(`Vehicle ${vehicleId} ${type} position`);
   }
 
   renderRouteList = () => {
@@ -1033,6 +1087,8 @@ class Map extends React.Component {
   render() {
     const { activeTab } = this.props
     const MapPopup = (isInfo) => {
+      const { vroomContext } = this.props;
+      
       return (
         <React.Fragment>
           {isInfo ? (
@@ -1207,6 +1263,22 @@ class Map extends React.Component {
                 <Button compact onClick={this.handleAddJob}>
                   Add Job Here
                 </Button>
+                {vroomContext.vehicles.map(vehicle => (
+                  <React.Fragment key={vehicle.id}>
+                    <Button 
+                      compact 
+                      onClick={() => this.handleSetVehiclePosition(vehicle.id, 'start')}
+                    >
+                      Set Vehicle {vehicle.id} Start
+                    </Button>
+                    <Button 
+                      compact 
+                      onClick={() => this.handleSetVehiclePosition(vehicle.id, 'end')}
+                    >
+                      Set Vehicle {vehicle.id} End
+                    </Button>
+                  </React.Fragment>
+                ))}
               </Button.Group>
             </React.Fragment>
           ) : activeTab === 1 ? (

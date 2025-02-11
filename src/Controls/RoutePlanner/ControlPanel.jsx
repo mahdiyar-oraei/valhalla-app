@@ -13,19 +13,31 @@ export function ControlPanel() {
     removeJob,
     removeVehicle,
     addVehicle,
-    addJob
+    updateVehiclePosition
   } = useVroomContext();
 
   const handleSolve = async () => {
+    // Check if all vehicles have start positions
+    const invalidVehicles = vehicles.filter(v => !v.start);
+    if (invalidVehicles.length > 0) {
+      alert('All vehicles must have a start position');
+      return;
+    }
+
     try {
-      // Replace with your VROOM API endpoint
+      const vehiclesWithPositions = vehicles.map(vehicle => ({
+        id: vehicle.id,
+        start: vehicle.start,
+        end: vehicle.end || vehicle.start // Use start as end if no end specified
+      }));
+
       const response = await fetch('https://legacynominatim.trucksapp.ir', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          vehicles,
+          vehicles: vehiclesWithPositions,
           jobs,
         }),
       });
@@ -48,6 +60,16 @@ export function ControlPanel() {
           {vehicles.map((vehicle) => (
             <div key={vehicle.id} className="vehicle-item">
               <span>Vehicle {vehicle.id}</span>
+              <div className="vehicle-positions">
+                <span className="position-text">
+                  {vehicle.start ? `Start: (${vehicle.start[0].toFixed(4)}, ${vehicle.start[1].toFixed(4)})` : 
+                    <span className="missing-position">Set start position</span>}
+                </span>
+                <span className="position-text">
+                  {vehicle.end ? `End: (${vehicle.end[0].toFixed(4)}, ${vehicle.end[1].toFixed(4)})` : 
+                    <span className="missing-position">Set end position (optional)</span>}
+                </span>
+              </div>
               <button 
                 onClick={() => removeVehicle(vehicle.id)}
                 className="delete-button"
