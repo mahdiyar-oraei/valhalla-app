@@ -19,7 +19,7 @@ export function ControlPanel() {
   const handleSolve = async () => {
     try {
       // Replace with your VROOM API endpoint
-      const response = await fetch('YOUR_VROOM_API_ENDPOINT', {
+      const response = await fetch('https://legacynominatim.trucksapp.ir', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
