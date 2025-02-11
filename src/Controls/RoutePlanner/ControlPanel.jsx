@@ -41,10 +41,23 @@ export function ControlPanel() {
           jobs,
         }),
       });
-      const solution = await response.json();
-      setSolution(solution);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Validate solution structure
+      if (!data || !data.summary) {
+        throw new Error('Invalid solution format received');
+      }
+      
+      setSolution(data);
     } catch (error) {
       console.error('Error solving route:', error);
+      alert('Failed to solve route. Please try again.');
+      setSolution(null);
     }
   };
 
@@ -123,7 +136,7 @@ export function ControlPanel() {
           </button>
         </div>
 
-        {solution && (
+        {solution && solution.summary && (
           <div className="panel-section">
             <h3>Solution Summary</h3>
             <div className="solution-summary">
