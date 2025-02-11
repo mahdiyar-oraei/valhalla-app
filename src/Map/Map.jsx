@@ -413,6 +413,7 @@ class Map extends React.Component {
     this.addWaypoints()
     this.addIsoCenter()
     this.addIsochrones()
+    this.addJobs()
 
     if (!R.equals(this.props.coordinates, prevProps.coordinates)) {
       this.zoomToCoordinates()
@@ -948,6 +949,27 @@ class Map extends React.Component {
 
     // Add popup with job info
     jobMarker.bindPopup(`Job ${newJob.id}`);
+  }
+
+  addJobs = () => {
+    const { vroomContext } = this.props;
+    routeMarkersLayer.clearLayers(); // Clear existing markers
+    
+    vroomContext.jobs.forEach(job => {
+      const jobMarker = L.marker(job.location, {
+        icon: ExtraMarkers.icon({
+          icon: 'fa-box',
+          markerColor: 'blue',
+          shape: 'square',
+          prefix: 'fa',
+          iconColor: 'white',
+        }),
+        pmIgnore: true,
+      }).addTo(routeMarkersLayer);
+
+      // Add popup with job info
+      jobMarker.bindPopup(`Job ${job.id}`);
+    });
   }
 
   renderRouteList = () => {
