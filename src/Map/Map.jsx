@@ -35,6 +35,7 @@ import { colorMappings, buildHeightgraphData } from 'utils/heightgraph'
 import formatDuration from 'utils/date_time'
 import './Map.css'
 import { OSRM_API_URL } from 'utils/osrm'
+import { useVroomContext } from '../context/VroomContext'
 
 const OSMTiles = L.tileLayer(process.env.REACT_APP_TILE_SERVER_URL, {
   attribution:
@@ -116,6 +117,12 @@ const routeObjects = {
   },
 }
 
+// Wrap the existing Map class component to access context
+function MapWithContext(props) {
+  const vroomContext = useVroomContext();
+  return <Map {...props} vroomContext={vroomContext} />;
+}
+
 // this you have seen before, we define a react component
 class Map extends React.Component {
   static propTypes = {
@@ -130,6 +137,7 @@ class Map extends React.Component {
     zoomLevel: PropTypes.number,
     showDirectionsPanel: PropTypes.bool,
     showSettings: PropTypes.bool,
+    vroomContext: PropTypes.object.isRequired,
   }
 
   constructor(props) {
@@ -240,7 +248,7 @@ class Map extends React.Component {
             latLng: event.latlng,
           })
           popup.update()
-        }, 20) //eslint-disable-line
+        }, 20)
       }
     })
 
@@ -913,6 +921,35 @@ class Map extends React.Component {
     })
   }
 
+  handleAddJob = () => {
+    const { latLng } = this.state;
+    const { vroomContext } = this.props;
+    
+    this.map.closePopup();
+    
+    // Add job at clicked location
+    const newJob = {
+      id: Date.now(),
+      location: [latLng.lat, latLng.lng]
+    };
+    vroomContext.addJob(newJob);
+    
+    // Add marker for the job
+    const jobMarker = L.marker([latLng.lat, latLng.lng], {
+      icon: ExtraMarkers.icon({
+        icon: 'fa-box',
+        markerColor: 'blue',
+        shape: 'square',
+        prefix: 'fa',
+        iconColor: 'white',
+      }),
+      pmIgnore: true,
+    }).addTo(routeMarkersLayer);
+
+    // Add popup with job info
+    jobMarker.bindPopup(`Job ${newJob.id}`);
+  }
+
   renderRouteList = () => {
     const { results } = this.props.directions
     const { selectedRouteIndex } = this.state
@@ -1145,6 +1182,14 @@ class Map extends React.Component {
           ) : activeTab === 0 ? (
             <React.Fragment>
               <Button.Group size="small" basic vertical>
+                <Button compact onClick={this.handleAddJob}>
+                  Add Job Here
+                </Button>
+              </Button.Group>
+            </React.Fragment>
+          ) : activeTab === 1 ? (
+            <React.Fragment>
+              <Button.Group size="small" basic vertical>
                 <Button compact index={0} onClick={this.handleAddWaypoint}>
                   Directions from here
                 </Button>
@@ -1235,4 +1280,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(Map)
+export default connect(mapStateToProps)(MapWithContext);

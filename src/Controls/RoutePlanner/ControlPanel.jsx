@@ -68,7 +68,10 @@ export function ControlPanel() {
           <h3>Jobs ({jobs.length})</h3>
           {jobs.map((job) => (
             <div key={job.id} className="job-item">
-              <span>{job.description}</span>
+              <span>Job {job.id}</span>
+              <span className="location-text">
+                ({job.location[0].toFixed(4)}, {job.location[1].toFixed(4)})
+              </span>
               <button 
                 onClick={() => removeJob(job.id)}
                 className="delete-button"
@@ -77,13 +80,26 @@ export function ControlPanel() {
               </button>
             </div>
           ))}
+          <div className="help-text">
+            Click on the map to add jobs
+          </div>
         </div>
 
-        {jobs.length > 0 && vehicles.length > 0 && (
-          <button onClick={handleSolve} className="solve-button">
+        <div className="panel-section">
+          <button 
+            onClick={handleSolve}
+            className="solve-button"
+            disabled={jobs.length === 0 || vehicles.length === 0}
+          >
             Solve Route
           </button>
-        )}
+          <button 
+            onClick={clearAll}
+            className="clear-button"
+          >
+            Clear All
+          </button>
+        </div>
 
         {solution && (
           <div className="panel-section">
@@ -94,10 +110,6 @@ export function ControlPanel() {
             </div>
           </div>
         )}
-
-        <button onClick={clearAll} className="clear-button">
-          Clear All
-        </button>
       </div>
     </div>
   );
