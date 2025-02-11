@@ -11,7 +11,9 @@ export function ControlPanel() {
     clearAll, 
     setSolution,
     removeJob,
-    removeVehicle 
+    removeVehicle,
+    addVehicle,
+    addJob
   } = useVroomContext();
 
   const handleSolve = async () => {
