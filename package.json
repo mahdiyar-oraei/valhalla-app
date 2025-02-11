@@ -7,6 +7,7 @@
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@geoman-io/leaflet-geoman-free": "^2.13.1",
+    "@mapbox/polyline": "^1.2.1",
     "@mui/material": "^5.10.14",
     "@turf/turf": "^6.5.0",
     "axios": "^1.1.3",

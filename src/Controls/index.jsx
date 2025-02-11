@@ -23,6 +23,8 @@ import {
   updateIsoSettings,
 } from 'actions/isochronesActions'
 import { VALHALLA_OSM_URL } from 'utils/valhalla'
+import { ControlPanel } from './RoutePlanner/ControlPanel'
+import OutputControl from './RoutePlanner/OutputControl'
 
 const pairwise = (arr, func) => {
   let cnt = 0
@@ -208,6 +210,14 @@ class MainControl extends React.Component {
     const { activeTab } = this.props
     const appPanes = [
       {
+        menuItem: 'Route Planner',
+        render: () => (
+          <Tab.Pane style={{ padding: '0 0 0 0' }} attached={false}>
+            <ControlPanel />
+          </Tab.Pane>
+        ),
+      },
+      {
         menuItem: 'Directions',
         render: () => (
           <Tab.Pane style={{ padding: '0 0 0 0' }} attached={false}>
@@ -255,7 +265,11 @@ class MainControl extends React.Component {
           }}
           onClick={this.handleDirectionsToggle}
         >
-          {activeTab === 0 ? 'Directions' : 'Isochrones'}
+          {activeTab === 0
+            ? 'Directions'
+            : activeTab === 1
+            ? 'Isochrones'
+            : 'Route Planner'}
         </Button>
 
         <ButtonGroup
@@ -293,9 +307,9 @@ class MainControl extends React.Component {
                 <ServiceTabs />
               </div>
             </Segment>
-            {(activeTab === 0 && <DirectionOutputControl />) || (
-              <IsochronesOutputControl />
-            )}
+            {(activeTab === 0 && <OutputControl />) ||
+              (activeTab === 1 && <IsochronesOutputControl />) ||
+              (activeTab === 2 && <DirectionOutputControl />)}
           </div>
           <div
             style={{

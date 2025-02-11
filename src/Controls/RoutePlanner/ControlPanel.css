@@ -1,0 +1,49 @@
+.panel-control {
+    background-color: #fff;
+    opacity: 0.9;
+    bottom: 20px;
+    overflow-x: auto;
+    padding: 0 20px 40px;
+    right: 0px;
+    top: 0px;
+    z-index: 10;
+    border-radius: 4px;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
+    min-width: 200px;
+  }
+  
+  .panel-header {
+    padding: 20px 10px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .panel-section {
+    margin: 15px 0;
+  }
+  
+  .vehicle-item, .job-item {
+    padding: 8px;
+    margin: 5px 0;
+    background: #f5f5f5;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .solve-button, .clear-button {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .solve-button {
+    background: #0074D9;
+    color: white;
+  }
+  
+  .clear-button {
+    background: #FF4136;
+    color: white;
+  }
