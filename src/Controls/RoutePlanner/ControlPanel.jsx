@@ -69,6 +69,15 @@ export function ControlPanel() {
     }
   };
 
+  const formatDuration = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  };
+
   return (
     <div className="panel-control">
       <div className="panel-header">
@@ -170,8 +179,34 @@ export function ControlPanel() {
             <h3>Solution Summary</h3>
             <div className="solution-summary">
               <p>Total Distance: {(solution.summary.distance / 1000).toFixed(2)} km</p>
-              <p>Duration: {(solution.summary.duration / 60).toFixed(2)} minutes</p>
+              <p>Duration: {formatDuration(solution.summary.duration)}</p>
+              <p>Routes: {solution.summary.routes}</p>
+              <p>Unassigned Jobs: {solution.summary.unassigned}</p>
             </div>
+
+            {solution.routes.map((route, index) => (
+              <div key={index} className="route-details">
+                <h4>Route {index + 1}</h4>
+                <div className="route-summary">
+                  <p>Vehicle: {route.vehicle}</p>
+                  <p>Distance: {(route.distance / 1000).toFixed(2)} km</p>
+                  <p>Duration: {formatDuration(route.duration)}</p>
+                </div>
+                <div className="route-steps">
+                  {route.steps.map((step, stepIndex) => (
+                    <div key={stepIndex} className={`step-item ${step.type}`}>
+                      <span className="step-type">{step.type}</span>
+                      {step.type === 'job' && (
+                        <span className="step-job">Job {step.job}</span>
+                      )}
+                      <span className="step-arrival">
+                        Arrival: {formatDuration(step.arrival)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

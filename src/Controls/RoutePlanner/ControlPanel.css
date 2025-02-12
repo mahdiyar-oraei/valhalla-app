@@ -123,3 +123,56 @@
     margin-top: 2px;
     word-break: break-word;
   }
+
+  .solution-summary {
+    background: #f5f5f5;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+  }
+
+  .route-details {
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+    margin-top: 15px;
+  }
+
+  .route-summary {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px 0;
+  }
+
+  .route-steps {
+    margin-left: 10px;
+  }
+
+  .step-item {
+    padding: 8px;
+    margin: 5px 0;
+    border-left: 3px solid #ddd;
+    background: #fff;
+  }
+
+  .step-item.start { border-left-color: #2ecc40; }
+  .step-item.end { border-left-color: #ff4136; }
+  .step-item.job { border-left-color: #0074d9; }
+
+  .step-type {
+    text-transform: uppercase;
+    font-size: 0.8em;
+    font-weight: bold;
+    margin-right: 10px;
+  }
+
+  .step-job {
+    color: #666;
+    margin-right: 10px;
+  }
+
+  .step-arrival {
+    float: right;
+    color: #666;
+    font-size: 0.9em;
+  }

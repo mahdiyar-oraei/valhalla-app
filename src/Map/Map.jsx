@@ -36,6 +36,7 @@ import formatDuration from 'utils/date_time'
 import './Map.css'
 import { OSRM_API_URL } from 'utils/osrm'
 import { useVroomContext } from '../context/VroomContext'
+import polyline from '@mapbox/polyline'
 
 const OSMTiles = L.tileLayer(process.env.REACT_APP_TILE_SERVER_URL, {
   attribution:
@@ -438,6 +439,12 @@ class Map extends React.Component {
     if (!isochrones.successful) {
       isoPolygonLayer.clearLayers()
       isoLocationsLayer.clearLayers()
+    }
+
+    // Add this to update route display when solution changes
+    const { vroomContext } = this.props;
+    if (vroomContext.solution !== prevProps.vroomContext.solution) {
+      this.displayRoute(vroomContext.solution);
     }
   }
 
@@ -1075,6 +1082,83 @@ class Map extends React.Component {
       }
     });
   }
+
+  displayRoute = (solution) => {
+    if (!solution || !solution.routes) return;
+    
+    routeLineStringLayer.clearLayers();
+    
+    solution.routes.forEach((route) => {
+      if (route.geometry) {
+        // Use polyline.decode directly
+        const coordinates = polyline.decode(route.geometry);
+        
+        // Create the route line
+        const routeLine = L.polyline(coordinates, {
+          color: '#0066ff',
+          weight: 5,
+          opacity: 0.7
+        }).addTo(routeLineStringLayer);
+
+        // Add markers for each step with sequence numbers
+        route.steps.forEach((step, index) => {
+          const icon = this.getStepIcon(step.type, index + 1);
+          const marker = L.marker([step.location[1], step.location[0]], { icon })
+            .addTo(routeLineStringLayer);
+          
+          const popupContent = this.getStepPopupContent(step, index + 1);
+          marker.bindPopup(popupContent);
+        });
+      }
+    });
+
+    // Fit map to show all route elements
+    const bounds = routeLineStringLayer.getBounds();
+    this.map.fitBounds(bounds, { padding: [50, 50] });
+  };
+
+  getStepIcon = (type, sequence) => {
+    let icon;
+    switch (type) {
+      case 'start':
+        icon = 'fa-play';
+        break;
+      case 'end':
+        icon = 'fa-stop';
+        break;
+      case 'job':
+        icon = 'fa-box';
+        break;
+      default:
+        icon = 'fa-circle';
+    }
+
+    return ExtraMarkers.icon({
+      icon,
+      markerColor: type === 'job' ? 'blue' : 'green',
+      shape: 'circle',
+      prefix: 'fa',
+      iconColor: 'white',
+      number: sequence
+    });
+  };
+
+  getStepPopupContent = (step, sequence) => {
+    const formatDuration = (seconds) => {
+      const minutes = Math.floor(seconds / 60);
+      return `${minutes} min`;
+    };
+
+    let content = `<b>${step.type.toUpperCase()}</b><br/>`;
+    content += `Sequence: ${sequence}<br/>`;
+    content += `Arrival: ${formatDuration(step.arrival)}<br/>`;
+    if (step.type === 'job') {
+      content += `Job ID: ${step.job}<br/>`;
+    }
+    content += `Distance: ${(step.distance / 1000).toFixed(2)} km`;
+    
+    return content;
+  };
 
   renderRouteList = () => {
     const { results } = this.props.directions
