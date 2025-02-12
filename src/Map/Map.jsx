@@ -123,6 +123,8 @@ function MapWithContext(props) {
   return <Map {...props} vroomContext={vroomContext} />;
 }
 
+const NOMINATIM_REVERSE_URL = 'https://nominatim.trucksapp.ir/reverse';
+
 // this you have seen before, we define a react component
 class Map extends React.Component {
   static propTypes = {
@@ -922,34 +924,102 @@ class Map extends React.Component {
     })
   }
 
-  handleAddJob = () => {
+  handleReverseGeocode = async (latlng) => {
+    try {
+      const response = await fetch(
+        `${NOMINATIM_REVERSE_URL}?lat=${latlng.lat}&lon=${latlng.lng}&format=json`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching reverse geocode:', error);
+      return null;
+    }
+  };
+
+  handleAddJob = async () => {
     const { latLng } = this.state;
     const { vroomContext } = this.props;
     
     this.map.closePopup();
     
-    // Add job at clicked location
-    const newJob = {
-      id: Date.now(),
-      location: [latLng.lat, latLng.lng]
-    };
-    vroomContext.addJob(newJob);
+    // Get reverse geocoding data
+    const geocodeData = await this.handleReverseGeocode(latLng);
     
-    // Add marker for the job
-    const jobMarker = L.marker([latLng.lat, latLng.lng], {
-      icon: ExtraMarkers.icon({
-        icon: 'fa-box',
-        markerColor: 'blue',
-        shape: 'square',
-        prefix: 'fa',
-        iconColor: 'white',
-      }),
-      pmIgnore: true,
-    }).addTo(routeMarkersLayer);
+    if (geocodeData) {
+      // Use the precise coordinates from Nominatim
+      const location = [
+        parseFloat(geocodeData.lon),
+        parseFloat(geocodeData.lat),
+      ];
+      
+      // Add job with geocoded location
+      const newJob = {
+        id: Date.now(),
+        location: location,
+        address: geocodeData.display_name // Optional: store address information
+      };
+      
+      vroomContext.addJob(newJob);
+      
+      // Add marker for the job
+      const jobMarker = L.marker(location, {
+        icon: ExtraMarkers.icon({
+          icon: 'fa-box',
+          markerColor: 'blue',
+          shape: 'square',
+          prefix: 'fa',
+          iconColor: 'white',
+        }),
+        pmIgnore: true,
+      }).addTo(routeMarkersLayer);
 
-    // Add popup with job info
-    jobMarker.bindPopup(`Job ${newJob.id}`);
-  }
+      // Add popup with job info and address
+      jobMarker.bindPopup(`Job ${newJob.id}<br/>${geocodeData.display_name}`);
+    }
+  };
+
+  handleSetVehiclePosition = async (vehicleId, type) => {
+    const { latLng } = this.state;
+    const { vroomContext } = this.props;
+    
+    this.map.closePopup();
+    
+    // Get reverse geocoding data
+    const geocodeData = await this.handleReverseGeocode(latLng);
+    
+    if (geocodeData) {
+      // Use the precise coordinates from Nominatim
+      const position = [
+        parseFloat(geocodeData.lon),
+        parseFloat(geocodeData.lat),
+      ];
+      
+      vroomContext.updateVehiclePosition(vehicleId, type, position);
+      
+      // Add or update marker for the vehicle position
+      const marker = L.marker(position, {
+        icon: ExtraMarkers.icon({
+          icon: type === 'start' ? 'fa-play' : 'fa-stop',
+          markerColor: 'green',
+          shape: 'circle',
+          prefix: 'fa',
+          iconColor: 'white',
+        }),
+        pmIgnore: true,
+      }).addTo(routeMarkersLayer);
+
+      // Add popup with vehicle info and address
+      marker.bindPopup(
+        `Vehicle ${vehicleId} ${type} position<br/>${geocodeData.display_name}`
+      );
+    }
+  };
 
   addJobs = () => {
     const { vroomContext } = this.props;
@@ -1001,29 +1071,6 @@ class Map extends React.Component {
         endMarker.bindPopup(`Vehicle ${vehicle.id} end position`);
       }
     });
-  }
-
-  handleSetVehiclePosition = (vehicleId, type) => {
-    const { latLng } = this.state;
-    const { vroomContext } = this.props;
-    
-    this.map.closePopup();
-    
-    vroomContext.updateVehiclePosition(vehicleId, type, [latLng.lat, latLng.lng]);
-    
-    // Add or update marker for the vehicle position
-    const marker = L.marker([latLng.lat, latLng.lng], {
-      icon: ExtraMarkers.icon({
-        icon: type === 'start' ? 'fa-play' : 'fa-stop',
-        markerColor: 'green',
-        shape: 'circle',
-        prefix: 'fa',
-        iconColor: 'white',
-      }),
-      pmIgnore: true,
-    }).addTo(routeMarkersLayer);
-
-    marker.bindPopup(`Vehicle ${vehicleId} ${type} position`);
   }
 
   renderRouteList = () => {

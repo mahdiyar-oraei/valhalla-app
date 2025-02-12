@@ -75,12 +75,28 @@ export function ControlPanel() {
               <span>Vehicle {vehicle.id}</span>
               <div className="vehicle-positions">
                 <span className="position-text">
-                  {vehicle.start ? `Start: (${vehicle.start[0].toFixed(4)}, ${vehicle.start[1].toFixed(4)})` : 
-                    <span className="missing-position">Set start position</span>}
+                  {vehicle.start ? (
+                    <>
+                      Start: ({vehicle.start[0].toFixed(4)}, {vehicle.start[1].toFixed(4)})
+                      {vehicle.startAddress && (
+                        <div className="address-text">{vehicle.startAddress}</div>
+                      )}
+                    </>
+                  ) : (
+                    <span className="missing-position">Set start position</span>
+                  )}
                 </span>
                 <span className="position-text">
-                  {vehicle.end ? `End: (${vehicle.end[0].toFixed(4)}, ${vehicle.end[1].toFixed(4)})` : 
-                    <span className="missing-position">Set end position (optional)</span>}
+                  {vehicle.end ? (
+                    <>
+                      End: ({vehicle.end[0].toFixed(4)}, {vehicle.end[1].toFixed(4)})
+                      {vehicle.endAddress && (
+                        <div className="address-text">{vehicle.endAddress}</div>
+                      )}
+                    </>
+                  ) : (
+                    <span className="missing-position">Set end position (optional)</span>
+                  )}
                 </span>
               </div>
               <button 
@@ -104,9 +120,14 @@ export function ControlPanel() {
           {jobs.map((job) => (
             <div key={job.id} className="job-item">
               <span>Job {job.id}</span>
-              <span className="location-text">
-                ({job.location[0].toFixed(4)}, {job.location[1].toFixed(4)})
-              </span>
+              <div>
+                <div className="location-text">
+                  ({job.location[0].toFixed(4)}, {job.location[1].toFixed(4)})
+                </div>
+                {job.address && (
+                  <div className="address-text">{job.address}</div>
+                )}
+              </div>
               <button 
                 onClick={() => removeJob(job.id)}
                 className="delete-button"
