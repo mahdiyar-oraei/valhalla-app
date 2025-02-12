@@ -44,6 +44,9 @@ export function ControlPanel() {
         body: JSON.stringify({
           vehicles: vehiclesWithPositions,
           jobs: jobsWithSwappedCoords,
+          "options":{
+            "g": true
+          }
         }),
       });
       
