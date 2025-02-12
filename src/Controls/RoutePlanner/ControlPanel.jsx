@@ -27,8 +27,13 @@ export function ControlPanel() {
     try {
       const vehiclesWithPositions = vehicles.map(vehicle => ({
         id: vehicle.id,
-        start: vehicle.start,
-        end: vehicle.end || vehicle.start // Use start as end if no end specified
+        start: [vehicle.start[1], vehicle.start[0]],
+        end: vehicle.end ? [vehicle.end[1], vehicle.end[0]] : undefined
+      }));
+
+      const jobsWithSwappedCoords = jobs.map(job => ({
+        ...job,
+        location: [job.location[1], job.location[0]]
       }));
 
       const response = await fetch('https://legacynominatim.trucksapp.ir', {
@@ -38,7 +43,7 @@ export function ControlPanel() {
         },
         body: JSON.stringify({
           vehicles: vehiclesWithPositions,
-          jobs,
+          jobs: jobsWithSwappedCoords,
         }),
       });
       
