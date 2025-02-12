@@ -935,7 +935,18 @@ class Map extends React.Component {
       }
       
       const data = await response.json();
-      return data;
+      
+      // Create shorter address format
+      const shortAddress = [
+        data.address.road,
+        data.address.suburb,
+        data.address.city || data.address.town
+      ].filter(Boolean).join(', ');
+      
+      return {
+        ...data,
+        shortAddress
+      };
     } catch (error) {
       console.error('Error fetching reverse geocode:', error);
       return null;
@@ -948,26 +959,22 @@ class Map extends React.Component {
     
     this.map.closePopup();
     
-    // Get reverse geocoding data
     const geocodeData = await this.handleReverseGeocode(latLng);
     
     if (geocodeData) {
-      // Use the precise coordinates from Nominatim
       const location = [
-        parseFloat(geocodeData.lon),
         parseFloat(geocodeData.lat),
+        parseFloat(geocodeData.lon)
       ];
       
-      // Add job with geocoded location
       const newJob = {
         id: Date.now(),
         location: location,
-        address: geocodeData.display_name // Optional: store address information
+        address: geocodeData.shortAddress // Use shorter address
       };
       
       vroomContext.addJob(newJob);
       
-      // Add marker for the job
       const jobMarker = L.marker(location, {
         icon: ExtraMarkers.icon({
           icon: 'fa-box',
@@ -979,8 +986,7 @@ class Map extends React.Component {
         pmIgnore: true,
       }).addTo(routeMarkersLayer);
 
-      // Add popup with job info and address
-      jobMarker.bindPopup(`Job ${newJob.id}<br/>${geocodeData.display_name}`);
+      jobMarker.bindPopup(`Job ${newJob.id}<br/>${geocodeData.shortAddress}`);
     }
   };
 
@@ -990,19 +996,17 @@ class Map extends React.Component {
     
     this.map.closePopup();
     
-    // Get reverse geocoding data
     const geocodeData = await this.handleReverseGeocode(latLng);
     
     if (geocodeData) {
-      // Use the precise coordinates from Nominatim
       const position = [
-        parseFloat(geocodeData.lon),
         parseFloat(geocodeData.lat),
+        parseFloat(geocodeData.lon)
       ];
       
-      vroomContext.updateVehiclePosition(vehicleId, type, position);
+      const addressKey = type === 'start' ? 'startAddress' : 'endAddress';
+      vroomContext.updateVehiclePosition(vehicleId, type, position, geocodeData.shortAddress);
       
-      // Add or update marker for the vehicle position
       const marker = L.marker(position, {
         icon: ExtraMarkers.icon({
           icon: type === 'start' ? 'fa-play' : 'fa-stop',
@@ -1014,9 +1018,8 @@ class Map extends React.Component {
         pmIgnore: true,
       }).addTo(routeMarkersLayer);
 
-      // Add popup with vehicle info and address
       marker.bindPopup(
-        `Vehicle ${vehicleId} ${type} position<br/>${geocodeData.display_name}`
+        `Vehicle ${vehicleId} ${type} position<br/>${geocodeData.shortAddress}`
       );
     }
   };
