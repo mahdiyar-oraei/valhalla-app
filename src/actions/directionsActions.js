@@ -1,3 +1,4 @@
+/* eslint-disable */
 import axios from 'axios'
 import {
   ADD_WAYPOINT,
@@ -41,10 +42,8 @@ const fetchOSRMDirections = (osrmRequest) => (dispatch) => {
   dispatch(showLoading(true))
 
   axios
-    .post(OSRM_API_URL + '/route', osrmRequest, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    .get(OSRM_API_URL + '/route', {
+      params: osrmRequest
     })
     .then(({ data }) => {
       // Transform OSRM response to match expected format

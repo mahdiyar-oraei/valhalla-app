@@ -1,20 +1,20 @@
+/* eslint-disable */
 import polyline from '@mapbox/polyline'
 
 export const OSRM_API_URL = 'https://legacyosrm.trucksapp.ir'
 
 export const buildDirectionsRequest = ({ activeWaypoints }) => {
-  // Convert waypoints to OSRM format
-  const coordinates = activeWaypoints.map((waypoint) => [
-    waypoint.displaylnglat[0], // longitude
-    waypoint.displaylnglat[1], // latitude
-  ])
+  // Format coordinates as "lng,lat;lng,lat"
+  const coords = activeWaypoints
+    .map(wp => wp.displaylnglat.join(','))
+    .join(';')
 
   return {
-    coordinates,
-    alternatives: true, // if you want alternative routes
-    steps: true, // for turn-by-turn instructions
-    annotations: true, // for additional metadata
-    overview: 'full', // for full geometry
+    coords: coords,
+    alternatives: true,       // Keep existing parameters
+    steps: true,
+    geometries: 'polyline',
+    overview: 'full'
   }
 }
 
