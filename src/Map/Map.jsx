@@ -66,6 +66,7 @@ const routeLineStringLayer = L.featureGroup()
 const highlightRouteSegmentlayer = L.featureGroup()
 const highlightRouteIndexLayer = L.featureGroup()
 const excludePolygonsLayer = L.featureGroup()
+const vroomLayer = L.featureGroup()
 
 const centerCoords = process.env.REACT_APP_CENTER_COORDS.split(',')
 let center = [parseFloat(centerCoords[0]), parseFloat(centerCoords[1])]
@@ -107,6 +108,7 @@ const mapParams = {
     highlightRouteIndexLayer,
     excludePolygonsLayer,
     OSMTiles,
+    vroomLayer,
   ],
 }
 
@@ -991,7 +993,7 @@ class Map extends React.Component {
           iconColor: 'white',
         }),
         pmIgnore: true,
-      }).addTo(routeMarkersLayer);
+      }).addTo(vroomLayer);
 
       jobMarker.bindPopup(`Job ${newJob.id}<br/>${geocodeData.shortAddress}`);
     }
@@ -1023,7 +1025,7 @@ class Map extends React.Component {
           iconColor: 'white',
         }),
         pmIgnore: true,
-      }).addTo(routeMarkersLayer);
+      }).addTo(vroomLayer);
 
       marker.bindPopup(
         `Vehicle ${vehicleId} ${type} position<br/>${geocodeData.shortAddress}`
@@ -1033,7 +1035,7 @@ class Map extends React.Component {
 
   addJobs = () => {
     const { vroomContext } = this.props;
-    routeMarkersLayer.clearLayers();
+    vroomLayer.clearLayers();
     
     // Add job markers
     vroomContext.jobs.forEach(job => {
@@ -1046,7 +1048,7 @@ class Map extends React.Component {
           iconColor: 'white',
         }),
         pmIgnore: true,
-      }).addTo(routeMarkersLayer);
+      }).addTo(vroomLayer);
 
       jobMarker.bindPopup(`Job ${job.id}`);
     });
@@ -1063,7 +1065,7 @@ class Map extends React.Component {
             iconColor: 'white',
           }),
           pmIgnore: true,
-        }).addTo(routeMarkersLayer);
+        }).addTo(vroomLayer);
         startMarker.bindPopup(`Vehicle ${vehicle.id} start position`);
       }
 
@@ -1077,7 +1079,7 @@ class Map extends React.Component {
             iconColor: 'white',
           }),
           pmIgnore: true,
-        }).addTo(routeMarkersLayer);
+        }).addTo(vroomLayer);
         endMarker.bindPopup(`Vehicle ${vehicle.id} end position`);
       }
     });
