@@ -43,7 +43,10 @@ const fetchOSRMDirections = (osrmRequest) => (dispatch) => {
 
   axios
     .get(OSRM_API_URL + '/route', {
-      params: osrmRequest
+      params: {
+        ...osrmRequest,
+        token: 'demo'
+      }
     })
     .then(({ data }) => {
       // Transform OSRM response to match expected format

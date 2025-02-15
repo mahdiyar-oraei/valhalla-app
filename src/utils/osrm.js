@@ -1,7 +1,7 @@
 /* eslint-disable */
 import polyline from '@mapbox/polyline'
 
-export const OSRM_API_URL = 'https://legacyosrm.trucksapp.ir'
+export const OSRM_API_URL = 'https://api.trucksapp.ir'
 
 export const buildDirectionsRequest = ({ activeWaypoints }) => {
   // Format coordinates as "lng,lat;lng,lat"
