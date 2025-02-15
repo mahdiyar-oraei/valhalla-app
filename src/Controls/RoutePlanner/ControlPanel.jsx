@@ -81,7 +81,7 @@ export function ControlPanel() {
   return (
     <div className="panel-control">
       <div className="panel-header">
-        <h2>VROOM Control Panel</h2>
+        <h2>Route Planner</h2>
       </div>
 
       <div className="panel-content">
