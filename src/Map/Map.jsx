@@ -68,7 +68,9 @@ const highlightRouteSegmentlayer = L.featureGroup()
 const highlightRouteIndexLayer = L.featureGroup()
 const excludePolygonsLayer = L.featureGroup()
 const vroomLayer = L.featureGroup()
-const trafficLayer = L.featureGroup()
+const trafficLayer = L.featureGroup([], {
+  zIndex: 1450  // Set higher than default route layers
+})
 
 const centerCoords = process.env.REACT_APP_CENTER_COORDS.split(',')
 let center = [parseFloat(centerCoords[0]), parseFloat(centerCoords[1])]
@@ -725,6 +727,11 @@ class Map extends React.Component {
 
       if (this.hg._showState === true) {
         this.hg._expand()
+      }
+
+      // Re-add traffic layer on top if it exists
+      if (trafficLayer && trafficLayer.getLayers().length > 0) {
+        trafficLayer.bringToFront();
       }
     }
   }
@@ -1509,11 +1516,13 @@ class Map extends React.Component {
             return [parseFloat(lat), parseFloat(lng)];
           });
 
-        // Create polyline with traffic color
+        // Create polyline with traffic color and higher z-index
         const trafficLine = L.polyline(coordinates, {
           color: getTrafficColor(segment.level),
           weight: 5,
-          opacity: 0.7
+          opacity: 0.7,
+          zIndex: 1500, // Even higher than selected route
+          pane: 'overlayPane'
         });
 
         trafficLayer.addLayer(trafficLine);
@@ -1524,6 +1533,9 @@ class Map extends React.Component {
     if (!this.map.hasLayer(trafficLayer)) {
       this.map.addLayer(trafficLayer);
     }
+
+    // Ensure traffic layer is always on top
+    trafficLayer.bringToFront();
   }
 }
 
