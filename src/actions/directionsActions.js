@@ -15,6 +15,7 @@ import {
   HIGHLIGHT_MNV,
   ZOOM_TO_MNV,
   UPDATE_INCLINE_DECLINE,
+  RECEIVE_TRAFFIC_DATA,
 } from './types'
 
 import {
@@ -437,9 +438,20 @@ export const showProvider = (provider, show, idx) => ({
 export const fetchTrafficData = (routes) => (dispatch) => {
   axios.post('https://api.trucksapp.ir/traffic', { routes })
     .then(response => {
+      // Process traffic data for each route
+      const processedTrafficData = response.data.routes.map((routeTraffic, index) => {
+        return {
+          index,  // to identify which route this traffic belongs to
+          segments: routeTraffic.map(segment => ({
+            geometry: segment.geom,  // WKT LineString
+            level: segment.level,    // traffic level for coloring
+          }))
+        };
+      });
+
       dispatch({
-        type: 'RECEIVE_TRAFFIC_DATA',
-        payload: response.data
+        type: RECEIVE_TRAFFIC_DATA,
+        payload: processedTrafficData
       });
     })
     .catch(error => {
@@ -453,4 +465,20 @@ export const fetchTrafficData = (routes) => (dispatch) => {
         })
       );
     });
+};
+
+// Helper function to get color based on traffic level
+export const getTrafficColor = (level) => {
+  switch (level) {
+    case 1:
+      return '#00ff00'; // Green - free flow
+    case 2:
+      return '#ffff00'; // Yellow - moderate
+    case 3:
+      return '#ffa500'; // Orange - heavy
+    case 4:
+      return '#ff0000'; // Red - severe
+    default:
+      return '#808080'; // Gray - unknown
+  }
 };

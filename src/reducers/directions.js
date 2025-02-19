@@ -13,6 +13,7 @@ import {
   HIGHLIGHT_MNV,
   ZOOM_TO_MNV,
   UPDATE_INCLINE_DECLINE,
+  RECEIVE_TRAFFIC_DATA,
 } from 'actions/types'
 
 import { VALHALLA_OSM_URL } from '../utils/valhalla'
@@ -228,6 +229,12 @@ export const directions = (state = initialState, action) => {
       }
     }
 
+    case RECEIVE_TRAFFIC_DATA: {
+      return {
+        ...state,
+        trafficData: action.payload,
+      }
+    }
     default: {
       return state
     }

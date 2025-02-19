@@ -23,6 +23,7 @@ import { CopyToClipboard } from 'react-copy-to-clipboard'
 import {
   fetchReverseGeocode,
   updateInclineDeclineTotal,
+  getTrafficColor,
 } from 'actions/directionsActions'
 import { fetchReverseGeocodeIso } from 'actions/isochronesActions'
 import { updateSettings } from 'actions/commonActions'
@@ -67,6 +68,7 @@ const highlightRouteSegmentlayer = L.featureGroup()
 const highlightRouteIndexLayer = L.featureGroup()
 const excludePolygonsLayer = L.featureGroup()
 const vroomLayer = L.featureGroup()
+const trafficLayer = L.featureGroup()
 
 const centerCoords = process.env.REACT_APP_CENTER_COORDS.split(',')
 let center = [parseFloat(centerCoords[0]), parseFloat(centerCoords[1])]
@@ -109,6 +111,7 @@ const mapParams = {
     excludePolygonsLayer,
     OSMTiles,
     vroomLayer,
+    trafficLayer,
   ],
 }
 
@@ -447,6 +450,11 @@ class Map extends React.Component {
     const { vroomContext } = this.props;
     if (vroomContext.solution !== prevProps.vroomContext.solution) {
       this.displayRoute(vroomContext.solution);
+    }
+
+    // Handle traffic data updates
+    if (this.props.directions.trafficData !== prevProps.directions.trafficData) {
+      this.updateTrafficOverlay(this.props.directions.trafficData);
     }
   }
 
@@ -1481,6 +1489,41 @@ class Map extends React.Component {
         </div>
       </React.Fragment>
     )
+  }
+
+  updateTrafficOverlay = (trafficData) => {
+    if (!trafficData) return;
+
+    // Clear existing traffic layers
+    trafficLayer.clearLayers();
+
+    trafficData.forEach(routeTraffic => {
+      routeTraffic.segments.forEach(segment => {
+        // Convert WKT to GeoJSON
+        const coordinates = segment.geometry
+          .replace('LINESTRING(', '')
+          .replace(')', '')
+          .split(',')
+          .map(coord => {
+            const [lng, lat] = coord.trim().split(' ');
+            return [parseFloat(lat), parseFloat(lng)];
+          });
+
+        // Create polyline with traffic color
+        const trafficLine = L.polyline(coordinates, {
+          color: getTrafficColor(segment.level),
+          weight: 5,
+          opacity: 0.7
+        });
+
+        trafficLayer.addLayer(trafficLine);
+      });
+    });
+
+    // Add traffic layer to map if not already added
+    if (!this.map.hasLayer(trafficLayer)) {
+      this.map.addLayer(trafficLayer);
+    }
   }
 }
 
