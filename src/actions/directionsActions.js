@@ -45,6 +45,7 @@ const fetchOSRMDirections = (osrmRequest) => (dispatch) => {
     .get(OSRM_API_URL + '/route', {
       params: {
         ...osrmRequest,
+        annotations: true,
         token: 'demo'
       }
     })
@@ -69,6 +70,10 @@ const fetchOSRMDirections = (osrmRequest) => (dispatch) => {
           },
         })),
         decodedGeometry: decodeOSRMGeometry(data.routes[0].geometry),
+        // Add nodes from annotations
+        nodes: data.routes[0].legs.reduce((acc, leg) => {
+          return acc.concat(leg.annotation.nodes)
+        }, [])
       }
 
       console.log(transformedData)
@@ -78,11 +83,21 @@ const fetchOSRMDirections = (osrmRequest) => (dispatch) => {
           alternate.decodedGeometry = decodeOSRMGeometry(
             alternate.trip.geometry
           )
+          // Add nodes from annotations for each alternate route
+          alternate.nodes = alternate.trip.legs.reduce((acc, leg) => {
+            return acc.concat(leg.annotation.nodes)
+          }, [])
         })
       }
 
       dispatch(registerRouteResponse(OSRM_API_URL, transformedData))
       dispatch(zoomTo(transformedData.decodedGeometry))
+      // Fetch traffic data for main route and alternates
+      const routesForTraffic = [
+        { nodes: transformedData.nodes },
+        ...transformedData.alternates.map(alt => ({ nodes: alt.nodes }))
+      ]
+      dispatch(fetchTrafficData(routesForTraffic))
     })
     .catch((error) => {
       console.log(error)
@@ -418,3 +433,24 @@ export const showProvider = (provider, show, idx) => ({
     idx,
   },
 })
+
+export const fetchTrafficData = (routes) => (dispatch) => {
+  axios.post('https://api.trucksapp.ir/traffic', { routes })
+    .then(response => {
+      dispatch({
+        type: 'RECEIVE_TRAFFIC_DATA',
+        payload: response.data
+      });
+    })
+    .catch(error => {
+      console.error('Error fetching traffic data:', error);
+      dispatch(
+        sendMessage({
+          type: 'warning',
+          icon: 'warning',
+          description: 'Failed to fetch traffic data',
+          title: 'Error',
+        })
+      );
+    });
+};
