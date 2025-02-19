@@ -475,9 +475,9 @@ export const getTrafficColor = (level) => {
     case 2:
       return '#ffff00'; // Yellow - moderate
     case 3:
-      return '#ffa500'; // Orange - heavy
-    case 4:
       return '#ff0000'; // Red - severe
+    case 4:
+      return '#800000'; // Dark Red
     default:
       return '#808080'; // Gray - unknown
   }
