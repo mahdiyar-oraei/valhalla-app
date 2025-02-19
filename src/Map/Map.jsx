@@ -944,8 +944,12 @@ class Map extends React.Component {
 
   handleRouteSelect = (index) => {
     this.setState({ selectedRouteIndex: index }, () => {
-      this.addRoutes()
-    })
+      this.addRoutes();
+      // Update traffic overlay when route selection changes
+      if (this.props.directions.trafficData) {
+        this.updateTrafficOverlay(this.props.directions.trafficData);
+      }
+    });
   }
 
   handleReverseGeocode = async (latlng) => {
@@ -1501,10 +1505,15 @@ class Map extends React.Component {
   updateTrafficOverlay = (trafficData) => {
     if (!trafficData) return;
 
+    console.log('trafficData', trafficData);
+
     // Clear existing traffic layers
     trafficLayer.clearLayers();
 
     trafficData.forEach(routeTraffic => {
+      // Check if this route is selected
+      const isSelected = (this.state.selectedRouteIndex + 1) === routeTraffic.index;
+
       routeTraffic.segments.forEach(segment => {
         // Convert WKT to GeoJSON
         const coordinates = segment.geometry
@@ -1516,12 +1525,12 @@ class Map extends React.Component {
             return [parseFloat(lat), parseFloat(lng)];
           });
 
-        // Create polyline with traffic color and higher z-index
+        // Create polyline with traffic color and opacity based on selection
         const trafficLine = L.polyline(coordinates, {
           color: getTrafficColor(segment.level),
-          weight: 5,
-          opacity: 0.7,
-          zIndex: 1500, // Even higher than selected route
+          weight: isSelected ? 5 : 3,
+          opacity: isSelected ? 1 : 0.7, // Lower opacity for unselected routes
+          zIndex: 1500,
           pane: 'overlayPane'
         });
 
