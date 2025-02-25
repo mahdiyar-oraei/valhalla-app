@@ -57,7 +57,7 @@ def get_tile_path(graph_id):
     tile_dir = f"{level}/{tile_id[:3]}"
     return tile_dir, f"{tile_id[:3]}{tile_id[3:]}.csv"
 
-def get_edge_mappings(cursor, container_name="valhalla-container"):
+def get_edge_mappings(cursor, container_name="valhalla-container-mashhad"):
     """
     Use valhalla_ways_to_edges to get the mapping between OSM way IDs and Valhalla edge IDs
     Args:
@@ -79,7 +79,7 @@ def get_edge_mappings(cursor, container_name="valhalla-container"):
             f.write('way_id\n')
             cursor.execute("""
                 SELECT DISTINCT concat(from_node, '_', to_node) as way_id
-                FROM typical.pre_typical
+                FROM tmp.typical_mashhad
             """)
             for row in cursor:
                 f.write(f"{row[0]}\n")
@@ -205,14 +205,14 @@ def process_traffic_data(base_dir="traffic_tiles"):
                     tile_files[full_path] = True
 
                 # Calculate average speeds
-                cursor.execute("""
-                    SELECT 
-                        AVG(speed) as freeflow_speed,
-                        AVG(speed_red) as constrained_speed
-                    FROM typical.pre_typical
-                """)
+                # cursor.execute("""
+                #     SELECT 
+                #         AVG(speed) as freeflow_speed,
+                #         AVG(speed_red) as constrained_speed
+                #     FROM tmp.typical_mashhad
+                # """)
                 
-                speeds = cursor.fetchone()
+                speeds = (100, 10)
                 if speeds:
                     freeflow_speed, constrained_speed = speeds
                     
@@ -234,7 +234,7 @@ def process_traffic_data(base_dir="traffic_tiles"):
         cursor.close()
         conn.close()
 
-def add_traffic_to_valhalla(container_name="valhalla-container", traffic_dir="traffic_tiles"):
+def add_traffic_to_valhalla(container_name="valhalla-container-mashhad", traffic_dir="traffic_tiles"):
     """
     Add traffic data to Valhalla using valhalla_add_predicted_traffic
     """
@@ -259,6 +259,8 @@ def add_traffic_to_valhalla(container_name="valhalla-container", traffic_dir="tr
             "exec",
             container_name,
             "valhalla_add_predicted_traffic",
+            "-c",
+            "/data/valhalla.json",
             "-t",
             "/data/traffic_tiles"
         ]
