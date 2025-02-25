@@ -240,7 +240,30 @@ def add_traffic_to_valhalla(container_name="valhalla-container-mashhad", traffic
     """
     import subprocess
     try:
-        print(f"Copying traffic files to container '{container_name}'...")
+        # First, check if we have any traffic files
+        if not os.path.exists(traffic_dir):
+            raise Exception(f"Traffic directory '{traffic_dir}' does not exist")
+            
+        # Count files and show sample
+        traffic_files = []
+        for root, dirs, files in os.walk(traffic_dir):
+            for file in files:
+                if file.endswith('.csv'):
+                    traffic_files.append(os.path.join(root, file))
+        
+        print(f"Found {len(traffic_files)} traffic files locally")
+        if traffic_files:
+            print("Sample files:")
+            for file in traffic_files[:3]:
+                print(f"  {file}")
+                # Show first few lines of a sample file
+                with open(file, 'r') as f:
+                    print("    First 3 lines:")
+                    for i, line in enumerate(f):
+                        if i < 3:
+                            print(f"      {line.strip()}")
+        
+        print(f"\nCopying traffic files to container '{container_name}'...")
         copy_cmd = [
             "docker", 
             "cp", 
@@ -253,7 +276,21 @@ def add_traffic_to_valhalla(container_name="valhalla-container-mashhad", traffic
             raise Exception(f"Failed to copy traffic files to container: {result.stderr}")
         print("Successfully copied traffic files to container")
 
-        print("Adding traffic data to Valhalla...")
+        # Verify files in container
+        print("\nVerifying files in container...")
+        verify_cmd = [
+            "docker",
+            "exec",
+            container_name,
+            "ls",
+            "-R",
+            "/data/traffic_tiles"
+        ]
+        result = subprocess.run(verify_cmd, capture_output=True, text=True)
+        print("Files in container:")
+        print(result.stdout)
+
+        print("\nAdding traffic data to Valhalla...")
         cmd = [
             "docker", 
             "exec",
