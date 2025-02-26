@@ -33,17 +33,27 @@ def create_traffic_csv_structure(base_dir="traffic_tiles"):
 
 def convert_edge_to_graph_id(edge_id):
     """
-    Convert Valhalla edge ID to graph_id format (level/tile/id)
-    Based on Valhalla's edge ID format:
-    - The first 3 bits represent the level (0-7)
-    - The next 22 bits represent the tile ID
-    - The last 21 bits represent the ID within the tile
+    Convert Valhalla edge ID to graph_id format based on Valhalla's GraphId class.
+    
+    The 64-bit ID is structured as:
+    - First 3 bits: level (0-7)
+    - Next 22 bits: tile ID
+    - Next 21 bits: ID within tile
+    - Remaining bits: unused
+    
+    Example:
+    edge_id = 112642252344
+    Returns: "2/26844/123" (level/tileid/id)
     """
     edge_id = int(edge_id)
-    level = edge_id >> 46 & 0x7  # Get first 3 bits
-    tile = edge_id >> 24 & 0x3FFFFF  # Get next 22 bits
-    id = edge_id & 0x1FFFFF  # Get last 21 bits
-    return f"{level}/{tile}/{id}"
+    
+    # Extract components using bit operations matching Valhalla's implementation
+    level = edge_id & 0x7                    # First 3 bits (0x7 = 0b111)
+    tile_id = (edge_id & 0x1fffff8) >> 3    # Next 22 bits (shift right by 3 to remove level bits)
+    id = (edge_id & 0x3ffffe000000) >> 25   # Next 21 bits (shift right by 25)
+    
+    # Convert to string format matching Valhalla's to_string implementation
+    return f"{level}/{tile_id}/{id}"
 
 def get_tile_path(graph_id):
     """
@@ -404,3 +414,4 @@ if __name__ == "__main__":
     
     print(f"\nEnd time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=== Processing Complete ===")
+    
