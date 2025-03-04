@@ -21,8 +21,8 @@ app.add_middleware(
 PLANNER_URL = "http://localhost:3333"
 VALHALLA_URL = "http://localhost:8002"  # Adjust this to your Valhalla server URL
 
-# Initialize the middleware
-route_middleware = RouteMiddleware(VALHALLA_URL)
+# Initialize the middleware with logging disabled by default
+route_middleware = RouteMiddleware(VALHALLA_URL, enable_logging=False)
 
 @app.post("/")
 async def process_route(
@@ -57,6 +57,19 @@ async def process_route(
         raise HTTPException(status_code=500, detail=f"Error forwarding request: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+# Add an endpoint to control logging
+@app.post("/logging/{state}")
+async def control_logging(state: str):
+    """Enable or disable Valhalla request logging"""
+    if state.lower() == "enable":
+        route_middleware.enable_logging()
+        return {"message": "Logging enabled"}
+    elif state.lower() == "disable":
+        route_middleware.disable_logging()
+        return {"message": "Logging disabled"}
+    else:
+        raise HTTPException(status_code=400, detail="Invalid state. Use 'enable' or 'disable'")
 
 # Add an OPTIONS route handler
 @app.options("/{path:path}")

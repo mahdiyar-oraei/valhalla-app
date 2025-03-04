@@ -2,6 +2,7 @@
 
 import { useVroomContext } from '../../context/VroomContext';
 import './ControlPanel.css';
+import { useState } from 'react';
 
 export function ControlPanel() {
   const { 
@@ -15,6 +16,9 @@ export function ControlPanel() {
     addVehicle,
     updateVehiclePosition
   } = useVroomContext();
+
+  // Add state for datetime
+  const [baseTime, setBaseTime] = useState(new Date().toISOString().slice(0, 16));
 
   const handleSolve = async () => {
     // Check if all vehicles have start positions
@@ -36,7 +40,12 @@ export function ControlPanel() {
         location: [job.location[1], job.location[0]]
       }));
 
-      const response = await fetch('https://legacynominatim.trucksapp.ir', {
+      // Create URL with base_time parameter first
+      const url = new URL('https://legacynominatim.trucksapp.ir');
+      url.searchParams.append('base_time', baseTime);
+
+      // Use the constructed URL in the fetch call
+      const response = await fetch(url.toString(), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -44,10 +53,11 @@ export function ControlPanel() {
         body: JSON.stringify({
           vehicles: vehiclesWithPositions,
           jobs: jobsWithSwappedCoords,
-          "options":{
+          "options": {
             "g": true
           }
         }),
+        signal: new AbortController().signal
       });
       
       if (!response.ok) {
@@ -85,6 +95,17 @@ export function ControlPanel() {
       </div>
 
       <div className="panel-content">
+        <div className="panel-section">
+          <h3>Base Time</h3>
+          <input
+            type="datetime-local"
+            value={baseTime}
+            onChange={(e) => setBaseTime(e.target.value)}
+            className="datetime-picker"
+            step="60"
+          />
+        </div>
+
         <div className="panel-section">
           <h3>Vehicles ({vehicles.length})</h3>
           {vehicles.map((vehicle) => (
