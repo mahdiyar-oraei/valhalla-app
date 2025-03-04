@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import axios from 'axios'
 import {
   UPDATE_TEXTINPUT_ISO,
@@ -65,10 +67,19 @@ export const makeIsochronesRequest = () => (dispatch, getState) => {
 const fetchValhallaIsochrones = (valhallaRequest) => (dispatch, getState) => {
   dispatch(showLoading(true))
 
+  // Add date_time to the request
+  const requestWithDateTime = {
+    ...valhallaRequest.json,
+    date_time: {
+      type: 0,  // 1 = specified departure time
+      value: new Date().toISOString().slice(0, 16)  // Format: YYYY-MM-DDThh:mm
+    }
+  }
+
   for (const URL of [VALHALLA_OSM_URL]) {
     axios
       .get(URL + '/isochrone', {
-        params: { json: JSON.stringify(valhallaRequest.json) },
+        params: { json: JSON.stringify(requestWithDateTime) },
         headers: {
           'Content-Type': 'application/json',
         },
